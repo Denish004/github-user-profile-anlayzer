@@ -30,3 +30,26 @@ export interface CommitActivity {
   total: number;
   week: number;
 }
+
+// Add this type to match the GitHub commits API response
+export type GitHubCommit = {
+  sha: string;
+  commit: {
+    author: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    committer: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    message: string;
+  };
+  html_url: string;
+  author?: {
+    login: string;
+    avatar_url: string;
+  } | null;
+};

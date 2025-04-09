@@ -35,6 +35,7 @@ export function ReposList({ repos, onSelectRepo, selectedRepo }: ReposListProps)
               <Button
                 size="sm" 
                 variant="outline" 
+               className='bg-bluish-50 text-white hover:bg-indigo-600'
                 onClick={() => onSelectRepo(repo)}
               >
                 View Commits

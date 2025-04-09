@@ -1,98 +1,110 @@
-import { useEffect, useRef } from 'react';
-import { CommitActivity } from '@/types/github';
-import { Chart, registerables } from 'chart.js';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-Chart.register(...registerables);
-
-interface CommitChartProps {
-  commitData: CommitActivity[];
-  repoName: string;
-}
-
-export function CommitChart({ commitData, repoName }: CommitChartProps) {
-  const chartRef = useRef<HTMLCanvasElement>(null);
-  const chartInstance = useRef<Chart | null>(null);
-
-  useEffect(() => {
-    if (!chartRef.current || commitData.length === 0) return;
-
-    // Destroy previous chart instance if it exists
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-
-    // Prepare data for the chart
-    const weeks = commitData.map((week, index) => `Week ${index + 1}`).slice(-12);
-    const totals = commitData.map(week => week.total).slice(-12);
-
-    // Create new chart
-    const ctx = chartRef.current.getContext('2d');
-    if (ctx) {
-      chartInstance.current = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: weeks,
-          datasets: [{
-            label: 'Commits',
-            data: totals,
-            backgroundColor: 'rgba(59, 130, 246, 0.6)',
-            borderColor: 'rgba(59, 130, 246, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: `Weekly Commit Activity for ${repoName}`,
-              font: {
-                size: 16,
-                weight: 'bold'
-              }
-            },
-            tooltip: {
-              mode: 'index',
-              intersect: false,
-            },
-            legend: {
-              display: false
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Number of Commits'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Week'
-              }
-            }
-          }
-        }
-      });
-    }
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
+// Updated type to match GitHub API response structure
+type GitHubCommit = {
+  sha: string;
+  commit: {
+    author: {
+      name: string;
+      email: string;
+      date: string;
     };
-  }, [commitData, repoName]);
+    committer: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    message: string;
+  };
+  html_url: string;
+  author?: {
+    login: string;
+    avatar_url: string;
+  } | null;
+};
+
+type Props = {
+  commitData: GitHubCommit[];
+  repoName: string;
+};
+
+const CommitChart: React.FC<Props> = ({ commitData, repoName }) => {
+  // Group commits by date
+  const groupedData = commitData.reduce<Record<string, number>>((acc, item) => {
+    // Extract date from commit data (YYYY-MM-DD)
+    const date = item.commit.author.date.split("T")[0];
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Sort dates and format for display
+  const chartData = Object.entries(groupedData)
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .map(([date, count]) => ({
+      date,
+      commits: count,
+    }));
 
   return (
-    <div className="w-full max-w-2xl bg-white p-4 border rounded-lg mt-4">
-      <canvas ref={chartRef} />
-      {commitData.length === 0 && (
-        <div className="flex justify-center items-center h-40">
-          <p className="text-gray-500">No commit data available.</p>
+    <Card className="rounded-2xl shadow-lg p-4">
+      <CardHeader>
+        <CardTitle className="text-xl font-semibold">
+          Daily Commits - {repoName}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData}>
+            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+            <YAxis allowDecimals={false} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#fff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "0.5rem",
+                padding: "0.5rem",
+              }}
+            />
+            <Bar dataKey="commits" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+
+      {/* Display recent commits */}
+      <div className="mt-4 border-t pt-4">
+        <h3 className="text-lg font-semibold mb-3">Recent Commits</h3>
+        <div className="space-y-3 max-h-64 overflow-y-auto">
+          {commitData.slice(0, 10).map((commit) => (
+            <div key={commit.sha} className="border-l-4 border-blue-500 pl-3 py-2">
+              <div className="flex justify-between">
+                <div>
+                  <p className="font-medium truncate">{commit.commit.message}</p>
+                  <p className="text-sm text-gray-500">
+                    {commit.commit.author.name} • {new Date(commit.commit.author.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <a 
+                  href={commit.html_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-500 hover:underline text-sm"
+                >
+                  View
+                </a>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
-    </div>
+      </div>
+    </Card>
   );
-}
+};
+
+export default CommitChart;

@@ -8,10 +8,14 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		},
-  		colors: {}
-  	}
+		},
+		colors: {
+			bluish: {
+				50: '#4f46e5',
+			}
+		}
+	}
+
   },
   plugins: [require("tailwindcss-animate")],
 }
-
