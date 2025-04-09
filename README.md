@@ -3,8 +3,8 @@
 A modern web application that provides visual insights into GitHub profiles, repositories, and commit histories. Built with React, TypeScript, and Tailwind CSS.
 [GitHub Profile Analyzer]
 
-![GitHub Profile Analyzer](./src/assets/Screenshot 2025-04-09 231819.png)
-![GitHub Profile Analyzer](./src/assets/Screenshot 2025-04-09 231831.png)
+![GitHub Profile Analyzer - User Profile View](./src/assets/screenshot1.png)
+![GitHub Profile Analyzer - Repository Insights](./src/assets/screenshot2.png)
 ## Features
 
 - 🔍 Search for GitHub users by username
