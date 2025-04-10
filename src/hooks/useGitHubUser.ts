@@ -8,18 +8,22 @@ export function useGitHubUser(username: string) {
 
   useEffect(() => {
     if (!username) return;
-    
+
     const fetchUser = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(`https://api.github.com/users/${username}`);
-        
+
+        if (response.status === 404) {
+          throw new Error('User not found');
+        }
+
         if (!response.ok) {
           throw new Error(`GitHub API error: ${response.status}`);
         }
-        
+
         const userData = await response.json();
         setUser(userData);
       } catch (err) {
